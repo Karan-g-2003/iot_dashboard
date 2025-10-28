@@ -123,7 +123,7 @@ class TelemetryViewSet(viewsets.ModelViewSet):
                     device.save()
             
             # Update daily log
-            today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            today = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
             daily_log, created = DailyLog.objects.get_or_create(
                 device_id=telemetry.device_id,
                 date=today,
@@ -220,7 +220,7 @@ class DailyLogViewSet(viewsets.ReadOnlyModelViewSet):
         device_id = self.request.query_params.get('device_id', None)
 
         if days is not None:
-            start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=int(days))
+            start_date = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=int(days))
             queryset = queryset.filter(date__gte=start_date)
         
         if device_id is not None:

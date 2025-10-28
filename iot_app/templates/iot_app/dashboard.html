@@ -161,6 +161,79 @@
         .humidity-icon {
             color: var(--info-color);
         }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .fan-icon-container {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fan-icon-spinning {
+            animation: spin 2s linear infinite;
+            color: #4361ee;
+        }
+
+        .fan-status-card {
+            background: linear-gradient(145deg, #f0f0f0, #ffffff);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .threshold-slider .form-range {
+            height: 6px;
+        }
+
+        .threshold-slider .form-range::-webkit-slider-thumb {
+            height: 18px;
+            width: 18px;
+            background: #4361ee;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .threshold-slider .form-range::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .threshold-value {
+            font-weight: 600;
+            color: #4361ee;
+        }
+
+        #manual-toggle-container {
+            transition: opacity 0.3s ease;
+        }
+
+        .status-badge {
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.35rem 1rem;
+            border-radius: 2rem;
+        }
+
+        .status-on {
+            background-color: #4bb543;
+            color: white;
+        }
+
+        .status-off {
+            background-color: #6c757d;
+            color: white;
+        }
     </style>
 </head>
 
@@ -204,44 +277,164 @@
 
             <div class="col-md-6">
                 <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title"><i class="fas fa-fan me-2"></i>Fan Control</h5>
-                        <div class="text-center mb-3">
-                            <div class="form-check form-switch d-flex justify-content-center align-items-center mb-3">
-                                <input class="form-check-input me-2" type="checkbox" id="auto-mode"
-                                    style="transform: scale(1.5);">
-                                <label class="form-check-label" for="auto-mode">Automatic Control</label>
+                    <div class="card-body p-4">
+                        <!-- Fan Status Section -->
+                        <div class="fan-status-section mb-4 p-4 rounded-4"
+                            style="background: linear-gradient(145deg, #f8f9fa, #ffffff); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="fan-icon-wrapper me-3"
+                                        style="font-size: 2.5rem; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-fan" id="fan-icon"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">Fan Status</h5>
+                                        <div class="status-pill px-3 py-1 rounded-pill" id="relay-status-badge"
+                                            style="display: inline-block; font-weight: 600;">
+                                            <i class="fas fa-circle me-2"></i>
+                                            <span id="relay-status">OFF</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="control-mode-toggle">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="auto-mode"
+                                            style="transform: scale(1.3); margin-right: 10px;">
+                                        <label class="form-check-label" for="auto-mode">Auto</label>
+                                    </div>
+                                </div>
                             </div>
-                            <div id="manual-control">
-                                <label class="switch mb-2">
+                            <div class="temperature-info p-3 rounded-3 mb-3"
+                                style="background: rgba(67, 97, 238, 0.05);">
+                                <small class="d-block mb-2" id="temp-condition" style="font-size: 0.9rem;">Temperature
+                                    Status</small>
+                                <small class="text-muted">Last Updated: <span id="last-state-change">-</span></small>
+                            </div>
+                            <div id="manual-toggle-container" class="text-center">
+                                <label class="switch mb-0 d-inline-block">
                                     <input type="checkbox" id="relay-toggle">
                                     <span class="slider"></span>
                                 </label>
-                                <div class="status-badge" id="relay-status-badge">
-                                    Fan Status: <span id="relay-status">OFF</span>
-                                </div>
                             </div>
                         </div>
-                        <div id="threshold-controls">
-                            <div class="mb-3">
-                                <label class="form-label">High Temperature Threshold</label>
-                                <div class="input-group">
-                                    <input type="number" class="form-control" id="temp-high" step="0.5">
-                                    <span class="input-group-text">°C</span>
+
+                        <!-- Temperature Thresholds Section -->
+                        <div id="threshold-controls" class="temperature-thresholds p-4 rounded-4"
+                            style="background: rgba(67, 97, 238, 0.05);">
+                            <h6 class="mb-4">Temperature Thresholds</h6>
+
+                            <!-- High Temperature Threshold -->
+                            <div class="threshold-control mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="mb-0">
+                                        <i class="fas fa-thermometer-full text-danger me-2"></i>
+                                        High Threshold
+                                    </label>
+                                    <span class="threshold-value"
+                                        style="font-weight: 600; color: var(--primary-color);">
+                                        <span id="high-temp-display">28.0</span>°C
+                                    </span>
                                 </div>
+                                <input type="range" class="form-range" id="temp-high" min="20" max="40" step="0.5"
+                                    value="28">
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Low Temperature Threshold</label>
-                                <div class="input-group">
-                                    <input type="number" class="form-control" id="temp-low" step="0.5">
-                                    <span class="input-group-text">°C</span>
+
+                            <!-- Low Temperature Threshold -->
+                            <div class="threshold-control mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="mb-0">
+                                        <i class="fas fa-thermometer-empty text-info me-2"></i>
+                                        Low Threshold
+                                    </label>
+                                    <span class="threshold-value"
+                                        style="font-weight: 600; color: var(--primary-color);">
+                                        <span id="low-temp-display">24.0</span>°C
+                                    </span>
                                 </div>
+                                <input type="range" class="form-range" id="temp-low" min="15" max="35" step="0.5"
+                                    value="24">
                             </div>
-                            <button class="btn btn-primary w-100" id="save-thresholds">Save Thresholds</button>
+
+                            <button class="btn btn-primary w-100 rounded-3" id="save-thresholds">
+                                <i class="fas fa-save me-2"></i>Update Thresholds
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <style>
+                .fan-icon-wrapper {
+                    transition: transform 0.3s ease;
+                }
+
+                .fan-icon-wrapper:hover {
+                    transform: rotate(180deg);
+                }
+
+                .status-pill {
+                    transition: all 0.3s ease;
+                }
+
+                .status-on {
+                    background-color: rgba(75, 181, 67, 0.15);
+                    color: #4bb543;
+                }
+
+                .status-off {
+                    background-color: rgba(108, 117, 125, 0.15);
+                    color: #6c757d;
+                }
+
+                .temperature-info {
+                    border-left: 4px solid var(--primary-color);
+                }
+
+                .threshold-control {
+                    position: relative;
+                }
+
+                .form-range {
+                    height: 6px;
+                }
+
+                .form-range::-webkit-slider-thumb {
+                    height: 18px;
+                    width: 18px;
+                    border-radius: 50%;
+                    background: var(--primary-color);
+                    cursor: pointer;
+                    -webkit-appearance: none;
+                    margin-top: -6px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    transition: transform 0.2s ease;
+                }
+
+                .form-range::-webkit-slider-thumb:hover {
+                    transform: scale(1.1);
+                }
+
+                .form-range::-webkit-slider-runnable-track {
+                    height: 6px;
+                    border-radius: 3px;
+                    background: #e9ecef;
+                }
+
+                @keyframes spin {
+                    from {
+                        transform: rotate(0deg);
+                    }
+
+                    to {
+                        transform: rotate(360deg);
+                    }
+                }
+
+                .fan-icon-spinning {
+                    animation: spin 2s linear infinite;
+                    color: var(--primary-color);
+                }
+            </style>
         </div>
 
         <div class="row mt-4">
@@ -312,17 +505,56 @@
                     document.getElementById('temp-high').value = data.temp_threshold_high;
                     document.getElementById('temp-low').value = data.temp_threshold_low;
                     document.getElementById('manual-control').style.display = data.auto_mode ? 'none' : 'block';
+                    document.getElementById('relay-toggle').checked = data.relay;
+                    updateStatusBadge(data.relay);
+
+                    // Update control mode
+                    document.getElementById('control-mode').textContent = data.auto_mode ? 'Automatic' : 'Manual';
+                    document.getElementById('last-state-change').textContent = new Date().toLocaleTimeString();
+
+                    // Update temperature condition if in auto mode
+                    if (data.auto_mode) {
+                        const currentTemp = parseFloat(document.getElementById('current-temp').textContent);
+                        updateTempCondition(currentTemp, data.temp_threshold_low, data.temp_threshold_high);
+                    } else {
+                        document.getElementById('temp-condition').textContent = 'Manual Control';
+                    }
                 }
             } catch (error) {
                 console.error('Error loading device settings:', error);
             }
         }
 
+        function updateTempCondition(temp, lowThreshold, highThreshold) {
+            const conditionElem = document.getElementById('temp-condition');
+            if (temp >= highThreshold) {
+                conditionElem.textContent = `Above High Threshold (${highThreshold}°C)`;
+                conditionElem.style.color = '#ef233c';  // Red for high temp
+            } else if (temp <= lowThreshold) {
+                conditionElem.textContent = `Below Low Threshold (${lowThreshold}°C)`;
+                conditionElem.style.color = '#4361ee';  // Blue for low temp
+            } else {
+                conditionElem.textContent = `Within Range (${lowThreshold}°C - ${highThreshold}°C)`;
+                conditionElem.style.color = '#4bb543';  // Green for normal
+            }
+        }
+
         function updateStatusBadge(state) {
             const badge = document.getElementById('relay-status-badge');
             const status = document.getElementById('relay-status');
-            status.textContent = state ? 'ON' : 'OFF';
-            badge.className = `status-badge ${state ? 'status-on' : 'status-off'}`;
+            const fanIcon = document.getElementById('fan-icon');
+
+            status.textContent = state ? 'RUNNING' : 'STOPPED';
+            badge.className = `status-pill ${state ? 'status-on' : 'status-off'}`;
+
+            if (state) {
+                fanIcon.classList.add('fan-icon-spinning');
+            } else {
+                fanIcon.classList.remove('fan-icon-spinning');
+            }
+
+            // Update last state change time
+            document.getElementById('last-state-change').textContent = new Date().toLocaleTimeString();
         }
 
         function initChart() {
@@ -394,8 +626,20 @@
 
                 if (data.length > 0) {
                     // Update current readings with latest values
-                    document.getElementById('current-temp').textContent = `${data[data.length - 1].temperature.toFixed(1)} °C`;
-                    document.getElementById('current-humidity').textContent = `${data[data.length - 1].humidity.toFixed(1)} %`;
+                    const currentTemp = data[data.length - 1].temperature;
+                    const currentHumidity = data[data.length - 1].humidity;
+
+                    document.getElementById('current-temp').textContent = `${currentTemp.toFixed(1)} °C`;
+                    document.getElementById('current-humidity').textContent = `${currentHumidity.toFixed(1)} %`;
+
+                    // Check automation thresholds if in auto mode
+                    if (deviceSettings.auto_mode) {
+                        updateTempCondition(
+                            currentTemp,
+                            deviceSettings.temp_threshold_low,
+                            deviceSettings.temp_threshold_high
+                        );
+                    }
 
                     // Format timestamps based on timespan
                     const labels = data.map(reading => {
@@ -533,6 +777,23 @@
         });
 
         document.getElementById('history-range').addEventListener('change', fetchDailyLogs);
+
+        // Range slider handlers
+        document.getElementById('temp-high').addEventListener('input', (e) => {
+            document.getElementById('high-temp-display').textContent = e.target.value;
+        });
+
+        document.getElementById('temp-low').addEventListener('input', (e) => {
+            document.getElementById('low-temp-display').textContent = e.target.value;
+        });
+
+        // Auto mode toggle handler
+        document.getElementById('auto-mode').addEventListener('change', (e) => {
+            const isAuto = e.target.checked;
+            document.getElementById('manual-toggle-container').style.opacity = isAuto ? '0.5' : '1';
+            document.getElementById('relay-toggle').disabled = isAuto;
+            document.getElementById('threshold-controls').style.display = isAuto ? 'block' : 'none';
+        });
 
         // Initialize
         initChart();
