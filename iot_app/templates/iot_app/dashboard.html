@@ -251,9 +251,9 @@
                         <h5 class="card-title"><i class="fas fa-chart-line me-2"></i>Temperature & Humidity History</h5>
                         <div class="mb-3">
                             <select class="form-select" id="history-range">
+                                <option value="0">Last Hour</option>
                                 <option value="1">Last 24 Hours</option>
                                 <option value="7">Last 7 Days</option>
-                                <option value="30">Last 30 Days</option>
                             </select>
                         </div>
                         <div class="chart-container">
@@ -373,21 +373,57 @@
         }
 
         async function fetchTelemetry() {
+            const range = document.getElementById('history-range').value;
+            let timespan;
+
+            // Map range selection to timespan
+            switch (range) {
+                case '1':
+                    timespan = '24h';
+                    break;
+                case '7':
+                    timespan = '7d';
+                    break;
+                default:
+                    timespan = '1h';
+            }
+
             try {
-                const response = await fetch('/api/telemetry/');
+                const response = await fetch(`/api/telemetry/?timespan=${timespan}&device_id=${DEVICE_ID}`);
                 const data = await response.json();
 
                 if (data.length > 0) {
-                    document.getElementById('current-temp').textContent = `${data[0].temperature.toFixed(1)} °C`;
-                    document.getElementById('current-humidity').textContent = `${data[0].humidity.toFixed(1)} %`;
+                    // Update current readings with latest values
+                    document.getElementById('current-temp').textContent = `${data[data.length - 1].temperature.toFixed(1)} °C`;
+                    document.getElementById('current-humidity').textContent = `${data[data.length - 1].humidity.toFixed(1)} %`;
 
-                    const labels = data.map(reading => new Date(reading.timestamp).toLocaleTimeString());
+                    // Format timestamps based on timespan
+                    const labels = data.map(reading => {
+                        const date = new Date(reading.timestamp);
+                        switch (timespan) {
+                            case '1h':
+                                return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                            case '24h':
+                                return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                            case '7d':
+                                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                            default:
+                                return date.toLocaleTimeString();
+                        }
+                    });
+
                     const temps = data.map(reading => reading.temperature);
                     const humidity = data.map(reading => reading.humidity);
 
-                    climateChart.data.labels = labels.reverse();
-                    climateChart.data.datasets[0].data = temps.reverse();
-                    climateChart.data.datasets[1].data = humidity.reverse();
+                    climateChart.data.labels = labels;
+                    climateChart.data.datasets[0].data = temps;
+                    climateChart.data.datasets[1].data = humidity;
+
+                    // Update chart options based on timespan
+                    climateChart.options.scales.x.time = {
+                        unit: timespan === '7d' ? 'day' : 'hour'
+                    };
+
                     climateChart.update();
                 }
             } catch (error) {

@@ -13,6 +13,98 @@ class TelemetryViewSet(viewsets.ModelViewSet):
     queryset = Telemetry.objects.all()
     serializer_class = TelemetrySerializer
 
+    def list(self, request):
+        timespan = request.query_params.get('timespan', '1h')  # Default to 1 hour
+        device_id = request.query_params.get('device_id', None)
+        
+        # Get current time and round to nearest 10 minutes
+        now = timezone.now()
+        if timespan == '1h':
+            # For 1 hour view - data points every 10 minutes
+            start_time = now - timedelta(hours=1)
+            start_time = start_time.replace(minute=(start_time.minute // 10) * 10, second=0, microsecond=0)
+            readings = Telemetry.objects.filter(timestamp__gte=start_time)
+            if device_id:
+                readings = readings.filter(device_id=device_id)
+            
+            # Group by 10-minute intervals
+            data = []
+            current = start_time
+            while current <= now:
+                next_interval = current + timedelta(minutes=10)
+                interval_readings = readings.filter(
+                    timestamp__gte=current,
+                    timestamp__lt=next_interval
+                ).aggregate(
+                    avg_temp=Avg('temperature'),
+                    avg_hum=Avg('humidity')
+                )
+                
+                data.append({
+                    'timestamp': current.isoformat(),
+                    'temperature': interval_readings['avg_temp'] if interval_readings['avg_temp'] is not None else 0,
+                    'humidity': interval_readings['avg_hum'] if interval_readings['avg_hum'] is not None else 0
+                })
+                current = next_interval
+                
+        elif timespan == '24h':
+            # For 24 hours view - data points every hour
+            start_time = now - timedelta(days=1)
+            start_time = start_time.replace(minute=0, second=0, microsecond=0)
+            readings = Telemetry.objects.filter(timestamp__gte=start_time)
+            if device_id:
+                readings = readings.filter(device_id=device_id)
+            
+            # Group by hour
+            data = []
+            current = start_time
+            while current <= now:
+                next_hour = current + timedelta(hours=1)
+                hour_readings = readings.filter(
+                    timestamp__gte=current,
+                    timestamp__lt=next_hour
+                ).aggregate(
+                    avg_temp=Avg('temperature'),
+                    avg_hum=Avg('humidity')
+                )
+                
+                data.append({
+                    'timestamp': current.isoformat(),
+                    'temperature': hour_readings['avg_temp'] if hour_readings['avg_temp'] is not None else 0,
+                    'humidity': hour_readings['avg_hum'] if hour_readings['avg_hum'] is not None else 0
+                })
+                current = next_hour
+                
+        elif timespan == '7d':
+            # For 7 days view - data points every day
+            start_time = now - timedelta(days=7)
+            start_time = start_time.replace(hour=0, minute=0, second=0, microsecond=0)
+            readings = Telemetry.objects.filter(timestamp__gte=start_time)
+            if device_id:
+                readings = readings.filter(device_id=device_id)
+            
+            # Group by day
+            data = []
+            current = start_time
+            while current <= now:
+                next_day = current + timedelta(days=1)
+                day_readings = readings.filter(
+                    timestamp__gte=current,
+                    timestamp__lt=next_day
+                ).aggregate(
+                    avg_temp=Avg('temperature'),
+                    avg_hum=Avg('humidity')
+                )
+                
+                data.append({
+                    'timestamp': current.isoformat(),
+                    'temperature': day_readings['avg_temp'] if day_readings['avg_temp'] is not None else 0,
+                    'humidity': day_readings['avg_hum'] if day_readings['avg_hum'] is not None else 0
+                })
+                current = next_day
+        
+        return Response(data)
+
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
