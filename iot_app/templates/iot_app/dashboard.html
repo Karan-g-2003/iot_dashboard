@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4bb543;
+            --info-color: #0096c7;
+            --warning-color: #ffd60a;
+            --danger-color: #ef233c;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            border-radius: 0 0 1rem 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            background: white;
+            margin-bottom: 1.5rem;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            color: var(--dark-color);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+        }
+
+        .reading-card {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+        }
+
+        .reading-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+            color: var(--primary-color);
+        }
+
+        .reading-label {
+            color: #6c757d;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked+.slider {
+            background-color: var(--success-color);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 1rem;
+        }
+
+        .status-on {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .status-off {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 400px;
+        }
+
+        .icon-container {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .temperature-icon {
+            color: var(--danger-color);
+        }
+
+        .humidity-icon {
+            color: var(--info-color);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-header">
+        <div class="container">
+            <h1 class="display-5 fw-bold">IoT Room Climate Dashboard</h1>
+            <p class="lead">Real-time monitoring and control system</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-chart-line me-2"></i>Current Readings</h5>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="reading-card">
+                                    <div class="icon-container temperature-icon">
+                                        <i class="fas fa-thermometer-half"></i>
+                                    </div>
+                                    <div class="reading-value" id="current-temp">-- °C</div>
+                                    <p class="reading-label">Temperature</p>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="reading-card">
+                                    <div class="icon-container humidity-icon">
+                                        <i class="fas fa-tint"></i>
+                                    </div>
+                                    <div class="reading-value" id="current-humidity">-- %</div>
+                                    <p class="reading-label">Humidity</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-fan me-2"></i>Fan Control</h5>
+                        <div class="text-center mb-3">
+                            <div class="form-check form-switch d-flex justify-content-center align-items-center mb-3">
+                                <input class="form-check-input me-2" type="checkbox" id="auto-mode"
+                                    style="transform: scale(1.5);">
+                                <label class="form-check-label" for="auto-mode">Automatic Control</label>
+                            </div>
+                            <div id="manual-control">
+                                <label class="switch mb-2">
+                                    <input type="checkbox" id="relay-toggle">
+                                    <span class="slider"></span>
+                                </label>
+                                <div class="status-badge" id="relay-status-badge">
+                                    Fan Status: <span id="relay-status">OFF</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="threshold-controls">
+                            <div class="mb-3">
+                                <label class="form-label">High Temperature Threshold</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="temp-high" step="0.5">
+                                    <span class="input-group-text">°C</span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Low Temperature Threshold</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="temp-low" step="0.5">
+                                    <span class="input-group-text">°C</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary w-100" id="save-thresholds">Save Thresholds</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-chart-line me-2"></i>Temperature & Humidity History</h5>
+                        <div class="mb-3">
+                            <select class="form-select" id="history-range">
+                                <option value="1">Last 24 Hours</option>
+                                <option value="7">Last 7 Days</option>
+                                <option value="30">Last 30 Days</option>
+                            </select>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="climate-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-history me-2"></i>Daily Summary</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Avg Temp</th>
+                                        <th>Min Temp</th>
+                                        <th>Max Temp</th>
+                                        <th>Avg Humidity</th>
+                                        <th>Fan Runtime</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="daily-log-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DEVICE_ID = '001';
+        let climateChart;
+        let deviceSettings = {
+            auto_mode: true,
+            temp_threshold_high: 28,
+            temp_threshold_low: 24
+        };
+
+        async function loadDeviceSettings() {
+            try {
+                const response = await fetch(`/api/device/${DEVICE_ID}/command/`);
+                if (response.ok) {
+                    const data = await response.json();
+                    deviceSettings = data;
+
+                    // Update UI
+                    document.getElementById('auto-mode').checked = data.auto_mode;
+                    document.getElementById('temp-high').value = data.temp_threshold_high;
+                    document.getElementById('temp-low').value = data.temp_threshold_low;
+                    document.getElementById('manual-control').style.display = data.auto_mode ? 'none' : 'block';
+                }
+            } catch (error) {
+                console.error('Error loading device settings:', error);
+            }
+        }
+
+        function updateStatusBadge(state) {
+            const badge = document.getElementById('relay-status-badge');
+            const status = document.getElementById('relay-status');
+            status.textContent = state ? 'ON' : 'OFF';
+            badge.className = `status-badge ${state ? 'status-on' : 'status-off'}`;
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('climate-chart').getContext('2d');
+            climateChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Temperature (°C)',
+                        data: [],
+                        borderColor: 'rgb(239, 35, 60)',
+                        backgroundColor: 'rgba(239, 35, 60, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Humidity (%)',
+                        data: [],
+                        borderColor: 'rgb(0, 150, 199)',
+                        backgroundColor: 'rgba(0, 150, 199, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function fetchTelemetry() {
+            try {
+                const response = await fetch('/api/telemetry/');
+                const data = await response.json();
+
+                if (data.length > 0) {
+                    document.getElementById('current-temp').textContent = `${data[0].temperature.toFixed(1)} °C`;
+                    document.getElementById('current-humidity').textContent = `${data[0].humidity.toFixed(1)} %`;
+
+                    const labels = data.map(reading => new Date(reading.timestamp).toLocaleTimeString());
+                    const temps = data.map(reading => reading.temperature);
+                    const humidity = data.map(reading => reading.humidity);
+
+                    climateChart.data.labels = labels.reverse();
+                    climateChart.data.datasets[0].data = temps.reverse();
+                    climateChart.data.datasets[1].data = humidity.reverse();
+                    climateChart.update();
+                }
+            } catch (error) {
+                console.error('Error fetching telemetry:', error);
+            }
+        }
+
+        document.getElementById('relay-toggle').addEventListener('change', async (e) => {
+            const state = e.target.checked;
+            try {
+                const response = await fetch(`/api/device/${DEVICE_ID}/set_relay/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ state: state })
+                });
+
+                if (response.ok) {
+                    updateStatusBadge(state);
+                }
+            } catch (error) {
+                console.error('Error toggling relay:', error);
+                e.target.checked = !state;
+                updateStatusBadge(!state);
+            }
+        });
+
+        async function fetchDailyLogs() {
+            const days = document.getElementById('history-range').value;
+            try {
+                const response = await fetch(`/api/daily-logs/?days=${days}&device_id=${DEVICE_ID}`);
+                const data = await response.json();
+
+                const tbody = document.getElementById('daily-log-body');
+                tbody.innerHTML = '';
+
+                data.forEach(log => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${new Date(log.date).toLocaleDateString()}</td>
+                        <td>${log.avg_temperature.toFixed(1)} °C</td>
+                        <td>${log.min_temperature.toFixed(1)} °C</td>
+                        <td>${log.max_temperature.toFixed(1)} °C</td>
+                        <td>${log.avg_humidity.toFixed(1)} %</td>
+                        <td>${Math.floor(log.fan_runtime_minutes / 60)}h ${log.fan_runtime_minutes % 60}m</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching daily logs:', error);
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('auto-mode').addEventListener('change', async (e) => {
+            const auto = e.target.checked;
+            document.getElementById('manual-control').style.display = auto ? 'none' : 'block';
+
+            try {
+                await fetch(`/api/device/${DEVICE_ID}/set_relay/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ auto_mode: auto })
+                });
+            } catch (error) {
+                console.error('Error updating auto mode:', error);
+                e.target.checked = !auto;
+            }
+        });
+
+        document.getElementById('save-thresholds').addEventListener('click', async () => {
+            const highThreshold = parseFloat(document.getElementById('temp-high').value);
+            const lowThreshold = parseFloat(document.getElementById('temp-low').value);
+
+            if (highThreshold <= lowThreshold) {
+                alert('High threshold must be greater than low threshold');
+                return;
+            }
+
+            try {
+                await fetch(`/api/device/${DEVICE_ID}/set_relay/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        temp_threshold_high: highThreshold,
+                        temp_threshold_low: lowThreshold
+                    })
+                });
+                alert('Thresholds updated successfully');
+            } catch (error) {
+                console.error('Error updating thresholds:', error);
+                alert('Error updating thresholds');
+            }
+        });
+
+        document.getElementById('history-range').addEventListener('change', fetchDailyLogs);
+
+        // Initialize
+        initChart();
+        loadDeviceSettings();
+        fetchTelemetry();
+        fetchDailyLogs();
+        setInterval(fetchTelemetry, 15000);
+        setInterval(fetchDailyLogs, 300000); // Update logs every 5 minutes
+    </script>
+</body>
+
+</html>
