@@ -302,7 +302,7 @@
 
         async function loadDeviceSettings() {
             try {
-                const response = await fetch(`/api/device/${DEVICE_ID}/command/`);
+                const response = await fetch(`/api/devices/${DEVICE_ID}/command/`);
                 if (response.ok) {
                     const data = await response.json();
                     deviceSettings = data;
@@ -398,7 +398,7 @@
         document.getElementById('relay-toggle').addEventListener('change', async (e) => {
             const state = e.target.checked;
             try {
-                const response = await fetch(`/api/device/${DEVICE_ID}/set_relay/`, {
+                const response = await fetch(`/api/devices/${DEVICE_ID}/set_relay/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -427,13 +427,21 @@
 
                 data.forEach(log => {
                     const row = document.createElement('tr');
+                    const date = new Date(log.date);
+                    // Format numbers or use 0 if null
+                    const avgTemp = log.avg_temperature ? log.avg_temperature.toFixed(1) : '0.0';
+                    const minTemp = log.min_temperature ? log.min_temperature.toFixed(1) : '0.0';
+                    const maxTemp = log.max_temperature ? log.max_temperature.toFixed(1) : '0.0';
+                    const avgHum = log.avg_humidity ? log.avg_humidity.toFixed(1) : '0.0';
+                    const runtime = log.fan_runtime_minutes || 0;
+
                     row.innerHTML = `
-                        <td>${new Date(log.date).toLocaleDateString()}</td>
-                        <td>${log.avg_temperature.toFixed(1)} °C</td>
-                        <td>${log.min_temperature.toFixed(1)} °C</td>
-                        <td>${log.max_temperature.toFixed(1)} °C</td>
-                        <td>${log.avg_humidity.toFixed(1)} %</td>
-                        <td>${Math.floor(log.fan_runtime_minutes / 60)}h ${log.fan_runtime_minutes % 60}m</td>
+                        <td>${date.toLocaleDateString()}</td>
+                        <td>${avgTemp} °C</td>
+                        <td>${minTemp} °C</td>
+                        <td>${maxTemp} °C</td>
+                        <td>${avgHum} %</td>
+                        <td>${Math.floor(runtime / 60)}h ${runtime % 60}m</td>
                     `;
                     tbody.appendChild(row);
                 });
@@ -448,7 +456,7 @@
             document.getElementById('manual-control').style.display = auto ? 'none' : 'block';
 
             try {
-                await fetch(`/api/device/${DEVICE_ID}/set_relay/`, {
+                await fetch(`/api/devices/${DEVICE_ID}/set_relay/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -471,7 +479,7 @@
             }
 
             try {
-                await fetch(`/api/device/${DEVICE_ID}/set_relay/`, {
+                await fetch(`/api/devices/${DEVICE_ID}/set_relay/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

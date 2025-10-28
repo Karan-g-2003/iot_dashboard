@@ -128,7 +128,7 @@ class DailyLogViewSet(viewsets.ReadOnlyModelViewSet):
         device_id = self.request.query_params.get('device_id', None)
 
         if days is not None:
-            start_date = timezone.now().date() - timedelta(days=int(days))
+            start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=int(days))
             queryset = queryset.filter(date__gte=start_date)
         
         if device_id is not None:
