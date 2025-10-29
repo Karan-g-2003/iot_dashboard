@@ -3,9 +3,9 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 router = DefaultRouter()
-router.register(r'telemetry', views.TelemetryViewSet)
-router.register(r'devices', views.DeviceViewSet)  # Changed from 'device' to 'devices'
-router.register(r'daily-logs', views.DailyLogViewSet)
+router.register(r'telemetry', views.TelemetryViewSet, basename='telemetry')
+router.register(r'devices', views.DeviceViewSet, basename='device')
+router.register(r'daily-logs', views.DailyLogViewSet, basename='daily-log')
 
 urlpatterns = [
     path('api/', include(router.urls)),

@@ -1,0 +1,40 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static " admin/css/changelists.css" %}">
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="module filtered" id="changelist">
+        {% if objects %}
+        <div class="results">
+            <table id="result_list">
+                <thead>
+                    <tr>
+                        {% for field in objects.0.keys %}
+                        <th scope="col">
+                            <div class="text">{{ field|title }}</div>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for object in objects %}
+                    <tr class="{% cycle 'row1' 'row2' %}">
+                        {% for value in object.values %}
+                        <td>{{ value }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="paginator">{% trans "No objects found." %}</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

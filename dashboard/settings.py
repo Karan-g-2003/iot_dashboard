@@ -74,17 +74,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'dashboard.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'iot_dashboard',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
+MONGODB_SETTINGS = {
+    'host': 'localhost',
+    'port': 27017,
+    'db': 'iot_dashboard'
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
